@@ -1,7 +1,6 @@
 import folium
 
 from priority import (
-    pending_visit_text,
     marker_color
 )
 
@@ -36,23 +35,6 @@ def create_popup(stop):
     """
 
     return html
-
-
-def add_office_marker(
-    m,
-    office_lat,
-    office_lon
-):
-
-    folium.Marker(
-        [office_lat, office_lon],
-        popup="Office",
-        tooltip="Office",
-        icon=folium.Icon(
-            color="black",
-            icon="home"
-        )
-    ).add_to(m)
 
 
 def add_customer_marker(
@@ -117,16 +99,16 @@ def add_route_line(
 
 def create_day_map(
     day,
-    office_lat,
-    office_lon
+    office_lat=None,
+    office_lon=None
 ):
 
     if len(day) == 0:
 
         return folium.Map(
             location=[
-                office_lat,
-                office_lon
+                7.5,
+                80.7
             ],
             zoom_start=8
         )
@@ -135,24 +117,17 @@ def create_day_map(
 
     m = folium.Map(
         location=[
-            first["Latitude"],
-            first["Longitude"]
+            float(
+                first["Latitude"]
+            ),
+            float(
+                first["Longitude"]
+            )
         ],
         zoom_start=9
     )
 
-    add_office_marker(
-        m,
-        office_lat,
-        office_lon
-    )
-
-    coordinates = [
-        [
-            office_lat,
-            office_lon
-        ]
-    ]
+    coordinates = []
 
     for idx, stop in enumerate(
         day,
@@ -220,22 +195,16 @@ def create_area_map(
 
 def create_full_plan_map(
     days,
-    office_lat,
-    office_lon
+    office_lat=None,
+    office_lon=None
 ):
 
     m = folium.Map(
         location=[
-            office_lat,
-            office_lon
+            7.5,
+            80.7
         ],
         zoom_start=7
-    )
-
-    add_office_marker(
-        m,
-        office_lat,
-        office_lon
     )
 
     colors = [
@@ -253,12 +222,7 @@ def create_full_plan_map(
         start=1
     ):
 
-        coords = [
-            [
-                office_lat,
-                office_lon
-            ]
-        ]
+        coords = []
 
         for stop in day:
 
@@ -290,34 +254,14 @@ def create_full_plan_map(
                 ]
             ).add_to(m)
 
-        folium.PolyLine(
-            coords,
-            weight=3,
-            color=colors[
-                day_no % len(colors)
-            ]
-        ).add_to(m)
+        if len(coords) > 1:
+
+            folium.PolyLine(
+                coords,
+                weight=3,
+                color=colors[
+                    day_no % len(colors)
+                ]
+            ).add_to(m)
 
     return m
-
-
-def create_heat_map_data(
-    customers
-):
-
-    result = []
-
-    for stop in customers:
-
-        result.append(
-            [
-                float(
-                    stop["Latitude"]
-                ),
-                float(
-                    stop["Longitude"]
-                )
-            ]
-        )
-
-    return result
