@@ -16,25 +16,29 @@ def coordinate_string(
 
 def build_google_maps_url(
     day,
-    office_lat,
-    office_lon
+    office_lat=None,
+    office_lon=None
 ):
-    """
-    Google Maps route link
-
-    Google waypoint limit:
-    approximately 23 waypoints
-
-    For larger routes we truncate.
-    """
 
     if len(day) == 0:
 
         return None
 
+    if len(day) == 1:
+
+        destination = coordinate_string(
+            day[0]["Latitude"],
+            day[0]["Longitude"]
+        )
+
+        return (
+            "https://www.google.com/maps/search/?api=1"
+            f"&query={destination}"
+        )
+
     origin = coordinate_string(
-        office_lat,
-        office_lon
+        day[0]["Latitude"],
+        day[0]["Longitude"]
     )
 
     destination = coordinate_string(
@@ -44,7 +48,7 @@ def build_google_maps_url(
 
     waypoints = []
 
-    for stop in day[:-1]:
+    for stop in day[1:-1]:
 
         waypoints.append(
             coordinate_string(
@@ -57,7 +61,7 @@ def build_google_maps_url(
         waypoints[:23]
     )
 
-    url = (
+    return (
         f"{GOOGLE_MAPS_BASE}"
         f"&origin={origin}"
         f"&destination={destination}"
@@ -65,13 +69,11 @@ def build_google_maps_url(
         f"&waypoints={quote(waypoint_string)}"
     )
 
-    return url
-
 
 def build_day_route_url(
     day,
-    office_lat,
-    office_lon
+    office_lat=None,
+    office_lon=None
 ):
 
     return build_google_maps_url(
@@ -83,8 +85,8 @@ def build_day_route_url(
 
 def build_area_route_url(
     customers,
-    office_lat,
-    office_lon
+    office_lat=None,
+    office_lon=None
 ):
 
     return build_google_maps_url(
@@ -96,14 +98,9 @@ def build_area_route_url(
 
 def build_single_customer_url(
     customer,
-    office_lat,
-    office_lon
+    office_lat=None,
+    office_lon=None
 ):
-
-    origin = coordinate_string(
-        office_lat,
-        office_lon
-    )
 
     destination = coordinate_string(
         customer["Latitude"],
@@ -111,83 +108,6 @@ def build_single_customer_url(
     )
 
     return (
-        f"{GOOGLE_MAPS_BASE}"
-        f"&origin={origin}"
-        f"&destination={destination}"
-        f"&travelmode=driving"
-    )
-
-
-def build_customer_search_url(
-    customer_name,
-    town=None
-):
-
-    query = customer_name
-
-    if town:
-
-        query = (
-            f"{customer_name} "
-            f"{town}"
-        )
-
-    query = quote(query)
-
-    return (
         "https://www.google.com/maps/search/?api=1"
-        f"&query={query}"
+        f"&query={destination}"
     )
-
-
-def get_route_statistics(
-    day
-):
-
-    if len(day) == 0:
-
-        return {
-            "stops": 0,
-            "first_stop": None,
-            "last_stop": None
-        }
-
-    return {
-        "stops": len(day),
-        "first_stop":
-            day[0].get(
-                "Customer name"
-            ),
-        "last_stop":
-            day[-1].get(
-                "Customer name"
-            )
-    }
-
-
-def build_navigation_links(
-    days,
-    office_lat,
-    office_lon
-):
-
-    result = []
-
-    for idx, day in enumerate(
-        days,
-        start=1
-    ):
-
-        result.append(
-            {
-                "day": idx,
-                "url":
-                    build_day_route_url(
-                        day,
-                        office_lat,
-                        office_lon
-                    )
-            }
-        )
-
-    return result
